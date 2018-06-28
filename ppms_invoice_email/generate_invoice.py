@@ -44,7 +44,7 @@ def create_html(
     }
 
     with open(invoice_path, 'w') as f:
-        html = render_template('invoice_template.html', context)
+        html = render_template('basic_invoice_template.html', context)
         f.write(html)
 
 
