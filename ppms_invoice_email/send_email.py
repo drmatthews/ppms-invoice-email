@@ -13,7 +13,7 @@ PASSWORD = os.environ['KCL_PASSWORD']
 credentials = Credentials(username=USERNAME, password=PASSWORD)
 
 config = Configuration(server='outlook.office365.com', credentials=credentials)
-account = Account(primary_smtp_address='k1493204@kcl.ac.uk', config=config,
+account = Account(primary_smtp_address='nic@kcl.ac.uk', config=config,
                   autodiscover=False, access_type=DELEGATE)
 
 
@@ -28,10 +28,13 @@ def send(recipients, invoice_ref):
 
     for recipient in recipients:
 
-        address = recipient.heademail
-        cc_address = recipient.admemail
+        # address = recipient.heademail
+        # cc_address = recipient.admemail
+        address = "daniel.r.matthews@kcl.ac.uk"
+        cc_address = "daniel.r.matthews@kcl.ac.uk"
         if recipient.send_only_admin:
-            address = recipient.admemail
+            # address = recipient.admemail
+            address = "daniel.r.matthews@kcl.ac.uk"
             cc_address = "daniel.r.matthews@kcl.ac.uk"
 
         print("address: {}".format(address))
@@ -41,7 +44,7 @@ def send(recipients, invoice_ref):
             account=account,
             folder=account.sent,
             subject=(
-                'NIC@KCL: Invoice {0} (NICatKings core facility)'
+                'NIC@KCL: Invoice {0}'
                 .format(invoice_ref)
             ),
             # to_recipients=[Mailbox(email_address=address)]
