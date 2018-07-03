@@ -115,6 +115,8 @@ def make_invoices(invoice_ref, split_code, include, exclude, only_admin):
 
     # api call to get the invoice - returns list of grant codes and charge
     date = datetime.strptime(invoice_ref[17:25], "%Y%m%d")
+    month = datetime.strptime(str(int(date.strftime("%m")) - 1), "%B")
+    print(month)
     invoice_date = (
         date.strftime("%Y"),
         date.strftime("%B"),
