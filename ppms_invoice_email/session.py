@@ -25,6 +25,8 @@ class Session(BaseSession):
         self.subsidy = subsidy
         if not isinstance(notes, str):
             self.notes = ""
+        if "cancelled too late" in self.notes:
+            self.notes = ""
         super().__init__(**kwargs)
         self.initial_amount = self.final_amount - self.fee + self.subsidy
 

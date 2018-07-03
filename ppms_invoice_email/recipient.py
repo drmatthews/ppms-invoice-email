@@ -98,6 +98,6 @@ def recipient_from_group(group_text):
 
     group = {}
     for k, v in zip(keys, values):
+        print("key: {0}, value: {1}".format(k, v))
         group[k] = v
-
     return Recipient(group)

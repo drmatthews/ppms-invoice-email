@@ -2,6 +2,8 @@
 
 import requests
 import os
+import csv
+import argparse
 import pandas as pd
 from datetime import datetime
 
@@ -23,6 +25,16 @@ else:
 
 PPMS_PUMAPI_KEY = os.environ['PPMS_PUMAPI_KEY']
 PPMS_URL = 'https://ppms.eu/kcl/pumapi/'
+INVOICE_FOLDER = '/home/daniel/Documents/PPMS_Invoices'
+
+
+def csv_as_list(path):
+    with open(path, newline='') as f:
+        reader = csv.reader(f)
+        as_list = []
+        for row in reader:
+            as_list.append(row[0])
+    return as_list
 
 
 def PPMS_call(payload):
@@ -84,7 +96,7 @@ def get_group(group_ref):
     return recipient_from_group(g)
 
 
-def make_invoices(invoice_ref, split_codes, include, exclude, only_admin):
+def make_invoices(invoice_ref, split_code, include, exclude, only_admin):
     """Use the PUMAPI to create an html invoice
 
     Args:
@@ -102,16 +114,20 @@ def make_invoices(invoice_ref, split_codes, include, exclude, only_admin):
     """
 
     # api call to get the invoice - returns list of grant codes and charge
+    date = datetime.strptime(invoice_ref[17:25], "%Y%m%d")
     invoice_date = (
-        datetime.strptime(invoice_ref[17:25], "%Y%m%d").strftime("%d/%m/%Y")
+        date.strftime("%Y"),
+        date.strftime("%B"),
+        date.strftime("%d/%m/%Y"),
     )
     invoice_list = get_invoice(invoice_ref)
     recipients = []
     for index, row in invoice_list.iterrows():
         bcode = row['bcode']
-        for code in split_codes:
-            if bcode in code:
-                bcode = code
+        if split_code:
+            for code in split_code:
+                if bcode in code:
+                    bcode = code
         details = get_invoice_details(bcode, invoice_ref)
 
         # check for training sessions in the invoice text
@@ -147,7 +163,11 @@ def make_invoices(invoice_ref, split_codes, include, exclude, only_admin):
         print("training_charge: {}".format(training_charge))
         print("")
 
-        invoice_path = "invoice_{0}-{1}.html".format(invoice_ref, group.bcode)
+        invoice_fname = (
+            "{0}/{1}/invoice_{2}-{3}.html".
+            format(invoice_date[0], invoice_date[1], invoice_ref, group.bcode)
+        )
+        invoice_path = os.path.join(INVOICE_FOLDER, invoice_fname)
         group.invoice = invoice_path
         #   generate an html summary
         generate_invoice.create_html(
@@ -178,28 +198,88 @@ def make_invoices(invoice_ref, split_codes, include, exclude, only_admin):
     return recipients
 
 
-def main(invoice_ref, split_codes, include, exclude, only_admin):
+def main(args):
+
+    invoice_ref = args.invoice_ref
+
+    include = []
+    if args.include:
+        include = csv_as_list(args.include)
+
+    exclude = []
+    if args.exclude:
+        exclude = csv_as_list(args.exclude)
+
+    split_code = []
+    if args.split_code:
+        split_code = csv_as_list(args.split_code)
+
+    only_admin = []
+    if args.only_admin:
+        only_admin = csv_as_list(args.only_admin)
+
     if include and exclude:
         raise ValueError("Use include or exclude not both together")
     recipients = make_invoices(
         invoice_ref,
-        split_codes,
+        split_code,
         include,
         exclude,
         only_admin
     )
-    if recipients:
-        send_email.send(recipients, invoice_ref)
+    print(recipients)
+    # if recipients:
+    #     send_email.send(recipients, invoice_ref)
 
 
 if __name__ == '__main__':
-    include = ['paula.booth@kcl.ac.uk']
-    exclude = []
-    only_admin = ['paula.booth']
-    main(
-        'PPMS2-NICatKings-20180601-DRAFT',
-        ["SPLIT|50|MGSRACR|50|MGS1000"],
-        include,
-        exclude,
-        only_admin
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-r",
+        "--invoice_ref",
+        type=str,
+        help=(
+            "The PPMS invoice reference"
+        ),
+        required=True
     )
+    parser.add_argument(
+        "-s",
+        "--split_code",
+        type=str,
+        help=(
+            "path to csv file holding split grant codes"
+        )
+    )
+    parser.add_argument(
+        "-i",
+        "--include",
+        type=str,
+        help=(
+            "path to csv file holding email addresses "
+            "to which an invoice will be sent"
+        )
+    )
+    parser.add_argument(
+        "-e",
+        "--exclude",
+        type=str,
+        help=(
+            "path to csv file holding email addresses "
+            "to which an invoice will be not sent"
+        )
+    )
+    parser.add_argument(
+        "-o",
+        "--only_admin",
+        type=str,
+        help=(
+            "path to csv file holding PPMS group logins "
+            "to which invoices will be sent only to group admins"
+        )
+    )
+
+    args = parser.parse_args()
+
+    main(args)
