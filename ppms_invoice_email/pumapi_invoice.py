@@ -12,6 +12,7 @@ from session import (
     sessions_from_invoice,
     filter_by_session_type,
     total_charge,
+    final_total,
     check_for_adjustments
 )
 import generate_invoice
@@ -123,6 +124,13 @@ def make_invoices(invoice_ref, split_code, include, exclude, only_admin):
         date.strftime("%d/%m/%Y"),
     )
     invoice_list = get_invoice(invoice_ref)
+
+    if include:
+        invoice_list = invoice_list[invoice_list['bcode'].isin(include)]
+
+    if exclude:
+        invoice_list = invoice_list[~invoice_list['bcode'].isin(include)]
+
     recipients = []
     for index, row in invoice_list.iterrows():
         bcode = row['bcode']
@@ -154,7 +162,9 @@ def make_invoices(invoice_ref, split_code, include, exclude, only_admin):
         autonomous_charge = total_charge(autonomous_sessions)
         assisted_charge = total_charge(assisted_sessions)
         training_charge = total_charge(training_sessions)
-
+        final_charge = final_total(
+            autonomous_sessions, assisted_sessions, training_sessions
+        )
         (fee_flag, subsidy_flag) = check_for_adjustments(autonomous_sessions)
 
         group = get_group(invoice[0]['Group'].values[0])
@@ -183,18 +193,12 @@ def make_invoices(invoice_ref, split_code, include, exclude, only_admin):
             autonomous_charge,
             assisted_charge,
             training_charge,
+            final_charge,
             fee_flag,
             subsidy_flag
         )
         if group.unitlogin in only_admin:
             group.send_only_admin = True
-
-        if include:
-            if group.heademail in include:
-                recipients.append(group)
-        elif exclude:
-            if group.heademail not in exclude:
-                recipients.append(group)
         else:
             recipients.append(group)
     return recipients
@@ -230,8 +234,8 @@ def main(args):
         only_admin
     )
     print(recipients)
-    # if recipients:
-    #     send_email.send(recipients, invoice_ref)
+    if recipients:
+        send_email.send(recipients, invoice_ref)
 
 
 if __name__ == '__main__':

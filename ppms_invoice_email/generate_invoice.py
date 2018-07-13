@@ -25,6 +25,7 @@ def create_html(
     autonomous_charge,
     assisted_charge,
     training_charge,
+    final_charge,
     fee_flag,
     subsidy_flag
 ):
@@ -38,7 +39,7 @@ def create_html(
         'autonomous_charge': autonomous_charge,
         'assisted_charge': assisted_charge,
         'training_charge': training_charge,
-        'total': autonomous_charge + assisted_charge + training_charge,
+        'total': final_charge,
         'fee_flag': fee_flag,
         'subsidy_flag': subsidy_flag
     }

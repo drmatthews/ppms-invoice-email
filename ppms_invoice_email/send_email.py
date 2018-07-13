@@ -28,14 +28,11 @@ def send(recipients, invoice_ref):
 
     for recipient in recipients:
 
-        # address = recipient.heademail
-        # cc_address = recipient.admemail
-        address = "daniel.r.matthews@kcl.ac.uk"
-        cc_address = "daniel.r.matthews@kcl.ac.uk"
+        address = recipient.heademail
+        cc_address = recipient.admemail
+
         if recipient.send_only_admin:
-            # address = recipient.admemail
-            address = "daniel.r.matthews@kcl.ac.uk"
-            cc_address = "daniel.r.matthews@kcl.ac.uk"
+            address = recipient.admemail
 
         print("address: {}".format(address))
         print("cc_address: {}".format(cc_address))
@@ -48,10 +45,12 @@ def send(recipients, invoice_ref):
                 .format(invoice_ref)
             ),
             # to_recipients=[Mailbox(email_address=address)]
-            to_recipients=[Mailbox(email_address='daniel.r.matthews@kcl.ac.uk')]
+            to_recipients=[Mailbox(email_address=address)]
         )
         if cc_address:
-            m.cc_recipients = [Mailbox(email_address=cc_address)]
+            m.cc_recipients = [
+                Mailbox(email_address=cc_address),
+            ]
 
         f = open(recipient.invoice, "r").read()
         m.body = HTMLBody(f)

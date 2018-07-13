@@ -6,6 +6,13 @@ class BaseSession:
         for key in kwargs:
             setattr(self, key, kwargs[key])
 
+    def round_final_amount(self):
+        return (
+            "{0:.2f}".format(
+                int((self.final_amount * 100) + 0.5) / float(100)
+            )
+        )
+
 
 class TrainingSession(BaseSession):
     """Class which encapsulates training sessions"""
@@ -82,7 +89,23 @@ def total_charge(sessions):
     total = 0.0
     for session in sessions:
         total += session.final_amount
-    return total
+    total = int((total * 100) + 0.5) / float(100)
+    return "{0:.2f}".format(total)
+
+
+def final_total(autonomous, assisted, training):
+    total = 0.0
+    for auto in autonomous:
+        total += auto.final_amount
+
+    for assit in assisted:
+        total += assit.final_amount
+
+    for train in training:
+        total += train.final_amount
+
+    total = int((total * 100) + 0.5) / float(100)
+    return "{0:.2f}".format(total)
 
 
 def check_for_adjustments(sessions):
