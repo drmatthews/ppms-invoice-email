@@ -177,7 +177,7 @@ def make_invoices(invoice_ref, split_code, include, exclude, only_admin):
 
         invoice_fname = (
             "{0}/{1}/invoice_{2}-{3}.html".
-            format(invoice_date[0], invoice_date[1], invoice_ref, group.bcode)
+            format(invoice_date[0], invoice_date[2], invoice_ref, group.bcode)
         )
         invoice_path = os.path.join(INVOICE_FOLDER, invoice_fname)
         group.invoice = invoice_path
