@@ -26,7 +26,7 @@ else:
 
 PPMS_PUMAPI_KEY = os.environ['PPMS_PUMAPI_KEY']
 PPMS_URL = 'https://ppms.eu/kcl/pumapi/'
-INVOICE_FOLDER = '/home/daniel/Documents/PPMS_Invoices'
+INVOICE_FOLDER = 'C:\\Users\\Daniel\\Documents\\NIC Admin\\Invoices'
 
 
 def csv_as_list(path):
@@ -143,6 +143,9 @@ def make_invoices(invoice_ref, split_code, include, exclude, only_admin):
         # check for training sessions in the invoice text
         # if there are training sessions store that text
         # as a new variable
+        if 'RE11034' in bcode:
+            invoice_text = details.split("\n", 3)
+            print(invoice_text)
         invoice_text = details.split("\n", 3)[3]
         if "Autonomous" in details and "Training" in details:
             a = invoice_text[0:invoice_text.find("Training")]
@@ -175,10 +178,14 @@ def make_invoices(invoice_ref, split_code, include, exclude, only_admin):
         print("training_charge: {}".format(training_charge))
         print("")
 
-        invoice_fname = (
-            "{0}/{1}/invoice_{2}-{3}.html".
-            format(invoice_date[0], invoice_date[2], invoice_ref, group.bcode)
-        )
+        s = [
+            invoice_date[0],
+            invoice_date[2],
+            "invoice_{0}-{1}.html".format(invoice_ref, group.bcode)
+        ]
+        invoice_fname = os.path.join(*s)
+        if '|' in invoice_fname:
+            invoice_fname.replace('|', '-')
         invoice_path = os.path.join(INVOICE_FOLDER, invoice_fname)
         group.invoice = invoice_path
         #   generate an html summary
@@ -234,8 +241,8 @@ def main(args):
         only_admin
     )
     print(recipients)
-    if recipients:
-        send_email.send(recipients, invoice_ref)
+    # if recipients:
+    #     send_email.send(recipients, invoice_ref)
 
 
 if __name__ == '__main__':
