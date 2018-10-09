@@ -1,0 +1,383 @@
+<!DOCTYPE HTML PUBLIC '-//W3C//DTD HTML 4.01//EN' 'http://www.w3.org/TR/html4/strict.dtd'>
+
+<html lang='en'>
+<head>
+    <title>
+        PPMS Invoice
+    </title>
+<meta http-equiv='Content-Type' content='text/html;charset=utf-8'>
+<meta http-equiv='Content-Script-Type' content='text/javascript'>
+<meta http-equiv='Content-Style-Type' content='text/css'>
+</head>
+<body>
+    <div style='float:left;border:1px solid #eee;padding:10px 10px 40px 10px;margin-bottom:10px;'>
+    <p style='font-family:Arial,Helvetica,sans-serif;font-size: 13px;'>
+        <strong>From:</strong>
+        <br/>Nikon Imaging Centre, KCL
+        <br />King&#39;s College London
+    </p>
+    <p style='font-family:Arial,Helvetica,sans-serif;font-size: 13px;margin-top:10px;'>
+        <strong>To:</strong>
+        <br/>{{ group.headname }} ({{ group.heademail }})
+        {% if group.admname %}
+            <br/>c/o {{ group.admname }}
+        {% endif %}
+        <br/>{{ group.unitname }}
+        <br/>{{ group.institution }}
+        <br/>{{ group.address }}
+    </p>
+    {% if group.admemail %}
+    <p style='font-family:Arial,Helvetica,sans-serif;font-size: 13px;margin-top:10px;'>
+        <strong>Contact email:</strong>
+        <br/>{{ group.admemail }}
+    </p>
+    {% endif %}
+    <p style='font-family:Arial,Helvetica,sans-serif;font-size: 13px;margin-top:10px;'>
+        <strong>Account number:</strong>
+        <br/>{{ group.bcode }}
+    </p>
+    <p style='font-family:Arial,Helvetica,sans-serif;font-size: 13px;margin-top:10px;'>
+        <strong>Invoice reference:</strong>
+        <br/>{{ invoice_ref }}
+    </p>
+    <p style='font-family:Arial,Helvetica,sans-serif;font-size: 13px;margin-top:10px;'>
+        <strong>Invoice date:</strong>
+        <br/>{{ invoice_date[2] }}
+    </p>
+    <p style='font-family:Arial,Helvetica,sans-serif;font-size: 13px;margin-top:10px;'>
+        <strong>Notes:</strong>
+        </br>
+        This is a summary of charges for use of the Nikon Imaging Centre for {{ invoice_date[2] }} {{ invoice_date[0]}}. Please check that the grant code information is correct; if you wish to make changes please let me know within 7 days. If the information is correct you do not need to take any further action, the charges will be sent to finance for processing.
+        </br>
+        </br>
+        If you have any questions or queries please do not hesitate to contact <a href="mailto:daniel.r.matthews@kcl.ac.uk">daniel.r.matthews@kcl.ac.uk</a>.
+        </br>
+        </br>
+        Kind regards,
+        </br>
+        </br>
+        Dan.    
+    </p>
+
+    <table summary='' style='margin-top:50px;border-collapse:collapse;empty-cells:show;font-family:Arial,Helvetica,sans-serif;font-size: 10px;'>
+        <tr>
+            <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' colspan='15'>
+                Invoice ref. {{ invoice_ref }}, for account number {{ group.bcode }}
+            </th>
+        </tr>
+        {% if autonomous_sessions %}
+            <tr style='background-color: #f6f8fb'>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' colspan='15'>
+                    Autonomous Sessions
+                </th>
+            </tr>
+            <tr>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' >
+                    Session
+                </th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' >
+                    User
+                </th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' >
+                    Type
+                </th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' >
+                    System
+                </th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' >
+                    Date
+                </th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' >
+                    Start time
+                </th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' >
+                    Booked time (minutes)
+                </th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' >
+                    <!-- Used time (minutes) -->
+                </th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' >
+                    Notes
+                </th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' >
+                    <!-- {% if fee_flag or subsidy_flag %}
+                        Initial Amount
+                    {% endif %} -->
+                </th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' >
+                    <!-- {% if subsidy_flag %}
+                        Rebate
+                    {% endif %} -->
+                </th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' >
+                    <!-- {% if fee_flag %}
+                        Fees
+                    {% endif %} -->
+                </th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' ></th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' >
+                    Final Amount
+                </th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' ></th>
+            </tr>
+
+            {% for session in autonomous_sessions %}
+            <tr style='background-color: #f6f8fb'>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:left;' >
+                    {{ session.session_ref }}
+                </td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:left;' >
+                    {{ session.user }}
+                </td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:left;' >
+                    {{ session.system_type }}
+                </td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:left;' >
+                    {{ session.system }}
+                </td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' >
+                    {{ session.date }}
+                </td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' >
+                    {{ session.start_time }}
+                </td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' >
+                    {{ session.booked_time }}
+                </td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' >
+                    <!-- {{ session.used_time }} -->
+                </td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:left;' >
+                    {{ session.notes }}
+                </td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' >
+                    <!-- {% if fee_flag or subsidy_flag %}
+                        {{ session.initial_amount|round(2, 'ceil') }}
+                    {% endif %} -->
+                </td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' >
+                    <!-- {% if subsidy_flag %}
+                        {{ session.subsidy|round(2, 'ceil') }}
+                    {% endif %} -->
+                </td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' >
+                    <!-- {% if fee_flag %}
+                        {{ session.fee|round(2, 'ceil') }}
+                    {% endif %} -->
+                </td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' ></td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' >
+                    {{ session.round_final_amount() }}
+                </td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' ></td>
+            </tr>
+            {% endfor %}
+        {% endif %}
+        {% if assisted_sessions %}
+            <tr style='background-color: #f6f8fb'>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' colspan='15'>
+                    Assisted Sessions
+                </th>
+            </tr>
+            <tr>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' >
+                    Session
+                </th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' >
+                    User
+                </th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' >
+                    Type
+                </th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' >
+                    System
+                </th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' >
+                    Date
+                </th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' >
+                    Start time
+                </th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' >
+                    Booked time (minutes)
+                </th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' >
+                    <!-- Used time (minutes) -->
+                </th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' >
+                    Notes
+                </th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' ></th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' ></th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' ></th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' ></th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' >
+                    Final Amount
+                </th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' ></th>
+            </tr>
+
+            {% for session in assisted_sessions %}
+            <tr style='background-color: #f6f8fb'>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:left;' >
+                    {{ session.session_ref }}
+                </td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:left;' >
+                    {{ session.user }}
+                </td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:left;' >
+                    {{ session.system_type }}
+                </td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:left;' >
+                    {{ session.system }}
+                </td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' >
+                    {{ session.date }}
+                </td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' >
+                    {{ session.start_time }}
+                </td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' >
+                    {{ session.booked_time }}
+                </td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' >
+                    <!-- {{ session.used_time }} -->
+                </td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:left;' >
+                    {{ session.notes }}
+                </td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' ><!--50.00--></td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' ></td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' ></td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' ></td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' >
+                    {{ session.round_final_amount() }}
+                </td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' ></td>
+            </tr>
+            {% endfor %}
+        {% endif %}        
+        {% if training_sessions %}
+            <tr style='background-color: #f6f8fb'>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' colspan='15'>
+                    Training Sessions
+                </th>
+            </tr>
+            <tr>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' >
+                    Session
+                </th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' >
+                    User
+                </th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' >
+                    Type
+                </th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' >
+                    System
+                </th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' >
+                    Date
+                </th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' >
+                    Start time
+                </th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' ></th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' >
+                    Duration (minutes)
+                </th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' ></th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' ></th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' ></th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' ></th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' ></th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' >
+                    Final Amount
+                </th>
+                <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' ></th>
+            </tr>
+            {% for session in training_sessions %}
+            <tr style='background-color: #f6f8fb'>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:left;' >
+                    {{ session.session_ref }}
+                </td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:left;' >
+                    {{ session.user }}
+                </td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:left;' >
+                    {{ session.system_type }}
+                </td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:left;' >
+                    {{ session.system }}
+                </td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' >
+                    {{ session.date }}
+                </td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' >
+                    {{ session.start_time }}
+                </td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' >
+                    {{ session.booked_time }}
+                </td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' >
+                    {{ session.duration }}
+                </td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:left;' ></td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' ><!--50.00--></td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' ></td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' ></td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' ></td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' >
+                    {{ session.round_final_amount() }}
+                </td>
+                <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' ></td>
+            </tr>
+            {% endfor %}        
+        {% endif %}
+        <tr>
+            <th style='text-align:left;vertical-align:top;background-color:#d4deef;color:#1b4283;border:1px solid #aac;' colspan='15'>
+                Summary
+            </th>
+        </tr>
+        {% if autonomous_sessions %}
+        <tr>
+            <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:left;' colspan='13'>
+                Total charged for autonomous use (after fees, rebates &amp; subsidies applied)
+            </td>
+            <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' >
+                {{ autonomous_charge }}
+            </td>
+            <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' ></td>
+        </tr>
+        {% endif %}
+        {% if assisted_sessions %}
+        <tr>
+            <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:left;' colspan='13'>
+                Total charged for training sessions (after fees, rebates &amp; subsidies applied)
+            </td>
+            <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' >
+                {{ assisted_charge }}
+            </td>
+            <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' ></td>
+        </tr>
+        {% endif %}        
+        {% if training_sessions %}
+        <tr>
+            <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:left;' colspan='13'>
+                Total charged for training sessions (after fees, rebates &amp; subsidies applied)
+            </td>
+            <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' >
+                {{ training_charge }}
+            </td>
+            <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' ></td>
+        </tr>
+        {% endif %}
+        <tr style='background-color: #f6f8fb'>
+            <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:left;' colspan='13'>
+                <strong>Total amount charged</strong>
+            </td>
+            <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' >
+                <strong>{{ total }}</strong>
+            </td>
+            <td style='vertical-align:top;padding:2px 3px;border:1px solid #aac;text-align:right;' ></td>
+        </tr>
