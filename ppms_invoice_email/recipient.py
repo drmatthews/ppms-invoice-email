@@ -36,6 +36,7 @@ class Recipient:
     def __init__(self, group_details):
 
         for key in group_details:
+            # print(key)
             setattr(self, key, group_details[key])
 
         self.address = self.address.replace('|', ', ')

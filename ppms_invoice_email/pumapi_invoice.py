@@ -96,6 +96,70 @@ def get_group(group_ref):
     g = PPMS_call(group)
     return recipient_from_group(g)
 
+def process_invoice_details(details, bcode, invoice_date, invoice_ref):
+        # check for training sessions in the invoice text
+        # if there are training sessions store that text
+        # as a new variable
+
+        invoice_text = details.split("\n", 3)[3]
+        if "Autonomous" in details and "Training" in details:
+            a = invoice_text[0:invoice_text.find("Training")]
+            t = invoice_text[invoice_text.find("Training"):]
+            a_df = pd.read_csv(StringIO(a), sep=",")
+            t_df = pd.read_csv(StringIO(t), sep=",", header=1)
+            invoice = [a_df, t_df]
+        else:
+            invoice = [pd.read_csv(StringIO(invoice_text), sep=",")]
+
+        sessions = sessions_from_invoice(invoice)
+
+        autonomous_sessions = filter_by_session_type(sessions, "autonomous")
+        assisted_sessions = filter_by_session_type(sessions, "assisted")
+        training_sessions = filter_by_session_type(sessions, "training")
+
+        autonomous_charge = total_charge(autonomous_sessions)
+        assisted_charge = total_charge(assisted_sessions)
+        training_charge = total_charge(training_sessions)
+        final_charge = final_total(
+            autonomous_sessions, assisted_sessions, training_sessions
+        )
+        (fee_flag, subsidy_flag) = check_for_adjustments(autonomous_sessions)
+
+        group = get_group(invoice[0]['Group'].values[0])
+        group.bcode = bcode
+        print("autonomous_charge: {}".format(autonomous_charge))
+        print("assisted_charge: {}".format(assisted_charge))
+        print("training_charge: {}".format(training_charge))
+
+        s = [
+            invoice_date[0],
+            invoice_date[2],
+            "invoice_{0}-{1}.html".format(invoice_ref, group.bcode)
+        ]
+        invoice_fname = os.path.join(*s)
+        if '|' in invoice_fname:
+            invoice_fname = invoice_fname.replace('|', '-')
+        print(invoice_fname)
+        print("")
+        invoice_path = os.path.join(INVOICE_FOLDER, invoice_fname)
+        group.invoice = invoice_path
+        #   generate an html summary
+        generate_invoice.create_html(
+            invoice_path,
+            invoice_ref,
+            invoice_date,
+            group,
+            autonomous_sessions,
+            assisted_sessions,
+            training_sessions,
+            autonomous_charge,
+            assisted_charge,
+            training_charge,
+            final_charge,
+            fee_flag,
+            subsidy_flag
+        )
+        return group
 
 def make_invoices(invoice_ref, split_code, include, exclude, only_admin):
     """Use the PUMAPI to create an html invoice
@@ -124,90 +188,42 @@ def make_invoices(invoice_ref, split_code, include, exclude, only_admin):
         date.strftime("%d/%m/%Y"),
     )
     invoice_list = get_invoice(invoice_ref)
+    
 
     if include:
         invoice_list = invoice_list[invoice_list['bcode'].isin(include)]
 
     if exclude:
-        invoice_list = invoice_list[~invoice_list['bcode'].isin(include)]
+        invoice_list = invoice_list[~invoice_list['bcode'].isin(exclude)]
+
+    if split_code:
+        for split in split_code:
+            invoice_list = invoice_list[~invoice_list.apply(lambda x: x['bcode'] in split, axis=1)]
 
     recipients = []
     for index, row in invoice_list.iterrows():
         bcode = row['bcode']
-        if split_code:
-            for code in split_code:
-                if bcode in code:
-                    bcode = code
+        print("grant code: {}".format(bcode))
+
         details = get_invoice_details(bcode, invoice_ref)
 
-        # check for training sessions in the invoice text
-        # if there are training sessions store that text
-        # as a new variable
-        if 'RE11034' in bcode:
-            invoice_text = details.split("\n", 3)
-            print(invoice_text)
-        invoice_text = details.split("\n", 3)[3]
-        if "Autonomous" in details and "Training" in details:
-            a = invoice_text[0:invoice_text.find("Training")]
-            t = invoice_text[invoice_text.find("Training"):]
-            a_df = pd.read_csv(StringIO(a), sep=",")
-            t_df = pd.read_csv(StringIO(t), sep=",", header=1)
-            invoice = [a_df, t_df]
-        else:
-            invoice = [pd.read_csv(StringIO(invoice_text), sep=",")]
+        group = process_invoice_details(details, bcode, invoice_date, invoice_ref)
 
-        sessions = sessions_from_invoice(invoice)
-
-        autonomous_sessions = filter_by_session_type(sessions, "autonomous")
-        assisted_sessions = filter_by_session_type(sessions, "assisted")
-        training_sessions = filter_by_session_type(sessions, "training")
-
-        autonomous_charge = total_charge(autonomous_sessions)
-        assisted_charge = total_charge(assisted_sessions)
-        training_charge = total_charge(training_sessions)
-        final_charge = final_total(
-            autonomous_sessions, assisted_sessions, training_sessions
-        )
-        (fee_flag, subsidy_flag) = check_for_adjustments(autonomous_sessions)
-
-        group = get_group(invoice[0]['Group'].values[0])
-        group.bcode = bcode
-        print("grant code: {}".format(bcode))
-        print("autonomous_charge: {}".format(autonomous_charge))
-        print("assisted_charge: {}".format(assisted_charge))
-        print("training_charge: {}".format(training_charge))
-        print("")
-
-        s = [
-            invoice_date[0],
-            invoice_date[2],
-            "invoice_{0}-{1}.html".format(invoice_ref, group.bcode)
-        ]
-        invoice_fname = os.path.join(*s)
-        if '|' in invoice_fname:
-            invoice_fname.replace('|', '-')
-        invoice_path = os.path.join(INVOICE_FOLDER, invoice_fname)
-        group.invoice = invoice_path
-        #   generate an html summary
-        generate_invoice.create_html(
-            invoice_path,
-            invoice_ref,
-            invoice_date,
-            group,
-            autonomous_sessions,
-            assisted_sessions,
-            training_sessions,
-            autonomous_charge,
-            assisted_charge,
-            training_charge,
-            final_charge,
-            fee_flag,
-            subsidy_flag
-        )
         if group.unitlogin in only_admin:
             group.send_only_admin = True
         else:
             recipients.append(group)
+
+    if split_code:
+        for bcode in split_code:
+            print("grant code: {}".format(bcode))
+            details = get_invoice_details(bcode, invoice_ref)
+            group = process_invoice_details(details, bcode, invoice_date, invoice_ref)
+            if group.unitlogin in only_admin:
+                group.send_only_admin = True
+            else:
+                recipients.append(group)
+
     return recipients
 
 
@@ -241,8 +257,8 @@ def main(args):
         only_admin
     )
     print(recipients)
-    # if recipients:
-    #     send_email.send(recipients, invoice_ref)
+    if recipients:
+        send_email.send(recipients, invoice_ref)
 
 
 if __name__ == '__main__':

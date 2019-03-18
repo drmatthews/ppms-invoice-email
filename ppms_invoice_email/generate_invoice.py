@@ -43,7 +43,7 @@ def create_html(
         'fee_flag': fee_flag,
         'subsidy_flag': subsidy_flag
     }
-    print(invoice_path)
+
     with open(invoice_path, 'w') as f:
         html = render_template('basic_invoice_template.html', context)
         f.write(html)
