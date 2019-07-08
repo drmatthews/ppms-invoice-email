@@ -4,6 +4,7 @@ import requests
 import os
 import csv
 import argparse
+from optparse import OptionParser
 import pandas as pd
 from datetime import datetime
 
@@ -30,11 +31,14 @@ INVOICE_FOLDER = 'C:\\Users\\Daniel\\Documents\\NIC Admin\\Invoices'
 
 
 def csv_as_list(path):
-    with open(path, newline='') as f:
-        reader = csv.reader(f)
+    try:
+        with open(path, newline='') as f:
+            reader = csv.reader(f)
+            as_list = []
+            for row in reader:
+                as_list.append(row[0])
+    except IndexError:
         as_list = []
-        for row in reader:
-            as_list.append(row[0])
     return as_list
 
 
@@ -68,14 +72,15 @@ def get_invoice(invoice_ref):
     )
 
 
-def get_invoice_details(bcode, invoice_ref):
+def get_invoice_details(invoice_ref, bcode=None):
     """Set up a PUMAPI call with the action `getinvoicedetails`"""
     invoice_details = {
         'action': 'getinvoicedetails',
         'invoiceid': invoice_ref,
-        'bcode': bcode,
         'apikey': PPMS_PUMAPI_KEY,
     }
+    if bcode:
+        invoice_details['bcode'] = bcode
     return PPMS_call(invoice_details)
 
 
@@ -97,9 +102,6 @@ def get_group(group_ref):
     return recipient_from_group(g)
 
 def process_invoice_details(details, bcode, invoice_date, invoice_ref):
-        # check for training sessions in the invoice text
-        # if there are training sessions store that text
-        # as a new variable
 
         invoice_text = details.split("\n", 3)[3]
         if "Autonomous" in details and "Training" in details:
@@ -187,8 +189,7 @@ def make_invoices(invoice_ref, split_code, include, exclude, only_admin):
         sessions_month.strftime("%B"),
         date.strftime("%d/%m/%Y"),
     )
-    invoice_list = get_invoice(invoice_ref)
-    
+    invoice_list = get_invoice(invoice_ref)   
 
     if include:
         invoice_list = invoice_list[invoice_list['bcode'].isin(include)]
@@ -205,50 +206,46 @@ def make_invoices(invoice_ref, split_code, include, exclude, only_admin):
         bcode = row['bcode']
         print("grant code: {}".format(bcode))
 
-        details = get_invoice_details(bcode, invoice_ref)
+        details = get_invoice_details(invoice_ref, bcode=bcode)
 
         group = process_invoice_details(details, bcode, invoice_date, invoice_ref)
 
         if group.unitlogin in only_admin:
             group.send_only_admin = True
-        else:
-            recipients.append(group)
+
+        recipients.append(group)
 
     if split_code:
         for bcode in split_code:
             print("grant code: {}".format(bcode))
-            details = get_invoice_details(bcode, invoice_ref)
+            details = get_invoice_details(invoice_ref, bcode=bcode)
             group = process_invoice_details(details, bcode, invoice_date, invoice_ref)
             if group.unitlogin in only_admin:
                 group.send_only_admin = True
-            else:
-                recipients.append(group)
+            
+            recipients.append(group)
 
     return recipients
 
 
-def main(args):
-
-    invoice_ref = args.invoice_ref
+def main(invoice_ref, opts):
 
     include = []
-    if args.include:
-        include = csv_as_list(args.include)
+    if opts.include:
+        include = csv_as_list(opts.include)
 
     exclude = []
-    if args.exclude:
-        exclude = csv_as_list(args.exclude)
+    if opts.exclude:
+        exclude = csv_as_list(opts.exclude)
 
     split_code = []
-    if args.split_code:
-        split_code = csv_as_list(args.split_code)
+    if opts.split_code:
+        split_code = csv_as_list(opts.split_code)
 
     only_admin = []
-    if args.only_admin:
-        only_admin = csv_as_list(args.only_admin)
+    if opts.only_admin:
+        only_admin = csv_as_list(opts.only_admin)
 
-    if include and exclude:
-        raise ValueError("Use include or exclude not both together")
     recipients = make_invoices(
         invoice_ref,
         split_code,
@@ -256,59 +253,46 @@ def main(args):
         exclude,
         only_admin
     )
-    print(recipients)
     if recipients:
         send_email.send(recipients, invoice_ref)
 
 
+
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-r",
-        "--invoice_ref",
-        type=str,
-        help=(
-            "The PPMS invoice reference"
-        ),
-        required=True
+    parser = OptionParser(
+        usage='Usage: %prog [options] <localisations>'
     )
-    parser.add_argument(
-        "-s",
-        "--split_code",
-        type=str,
-        help=(
-            "path to csv file holding split grant codes"
-        )
+    parser.add_option(
+        '-e', '--exclude',
+        metavar='EXCLUDE', dest='exclude',
+        default='exclude.csv',
+        help='list of grant codes to exclude from invoice as CSV'
     )
-    parser.add_argument(
-        "-i",
-        "--include",
-        type=str,
-        help=(
-            "path to csv file holding email addresses "
-            "to which an invoice will be sent"
-        )
+    parser.add_option(
+        '-i', '--include',
+        metavar='INCLUDE', dest='include',
+        default='include.csv',
+        help='list of grant codes to include in invoice as CSV'
     )
-    parser.add_argument(
-        "-e",
-        "--exclude",
-        type=str,
-        help=(
-            "path to csv file holding email addresses "
-            "to which an invoice will be not sent"
-        )
-    )
-    parser.add_argument(
-        "-o",
-        "--only_admin",
-        type=str,
-        help=(
-            "path to csv file holding PPMS group logins "
-            "to which invoices will be sent only to group admins"
-        )
+    parser.add_option(
+        '-o', '--only_admin',
+        metavar='ONLY_ADMIN', dest='only_admin',
+        default='only_admin.csv',
+        help='list of groups where invoice is sent only to group manager as CSV'
+    )    
+    parser.add_option(
+        '-s', '--split_code',
+        metavar='SPLIT_CODE', dest='split_code',
+        default='split_code.csv',
+        help='list of split grant codes to include from invoice as CSV'
     )
 
-    args = parser.parse_args()
+    (opts, args) = parser.parse_args()
 
-    main(args)
+    try:
+        ref = args[0]
+        main(ref, opts)
+    except IndexError:
+        print('Invoice referece missing')
+

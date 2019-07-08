@@ -44,6 +44,10 @@ def create_html(
         'subsidy_flag': subsidy_flag
     }
 
+    invoice_dir = os.path.dirname(invoice_path)
+    if not os.path.isdir(invoice_dir):
+        os.mkdir(invoice_dir)
+
     with open(invoice_path, 'w') as f:
         html = render_template('basic_invoice_template.html', context)
         f.write(html)
